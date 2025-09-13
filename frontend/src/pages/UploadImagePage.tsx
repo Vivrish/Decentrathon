@@ -1,5 +1,6 @@
 import { evaluateCar } from "@/api/evaluateCar";
 import { MultiImageUpload } from "@/components/multiImageUpload";
+import PageContainer from "@/components/PageContainer";
 
 async function uploadImages(files: File[]) {
   const res = await evaluateCar(files);
@@ -8,8 +9,8 @@ async function uploadImages(files: File[]) {
 
 export default function UploadImagePage() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center">
+    <PageContainer>
       <MultiImageUpload onUpload={uploadImages} maxFiles={5} />
-    </div>
+    </PageContainer>
   );
 }

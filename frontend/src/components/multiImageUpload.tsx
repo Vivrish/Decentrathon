@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { X } from "lucide-react";
 
 interface MultiImageUploadProps {
   onUpload: (files: File[]) => Promise<void>;
@@ -58,42 +59,54 @@ export function MultiImageUpload({
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap gap-3">
-        {previewUrls.map((url, idx) => (
-          <div key={idx} className="relative w-32 h-32">
-            <img
-              src={url}
-              alt={`preview-${idx}`}
-              className="w-full h-full object-cover rounded-md"
-            />
-            <button
-              type="button"
-              onClick={() => removeFile(idx)}
-              className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <Input
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={handleFileChange}
-        disabled={loading}
-      />
+    <div className="flex flex-col gap-4 grow w-full items-center">
+      <label
+        className="flex w-full items-center justify-center px-4 py-8 
+             bg-slate-100 text-gray-800 rounded-xl cursor-pointer 
+             hover:bg-slate-200 
+             transition-colors duration-300 ease-in-out"
+      >
+        <p className="font-medium text-lg">Загрузить фотографии +</p>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFileChange}
+          disabled={loading}
+          className="hidden"
+        />
+      </label>
 
       {error && <div className="text-red-500 text-sm">{error}</div>}
-
+      <div className="space-y-3 grow">
+        <div className="grid grid-cols-2 gap-3">
+          {previewUrls.map((url, idx) => (
+            <div
+              key={idx}
+              className="relative max-h-60 overflow-hidden rounded-lg"
+            >
+              <img
+                src={url}
+                alt={`preview-${idx}`}
+                className="w-full object-center"
+              />
+              <button
+                type="button"
+                onClick={() => removeFile(idx)}
+                className="absolute cursor-pointer top-2.5 right-2.5 bg-black/50 text-white rounded-full w-7 h-7 text-xs flex items-center justify-center"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
       <Button
         onClick={handleUpload}
         disabled={files.length === 0 || loading}
         variant="default"
       >
-        {loading ? "Uploading…" : `Upload ${files.length} image(s)`}
+        {loading ? "Uploading…" : `Заугрзить ${files.length} фотографий`}
       </Button>
     </div>
   );
