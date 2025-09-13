@@ -17,6 +17,8 @@ def evaluateCar(image: Image.Image) -> CarState:
 @app.route('/evaluate', methods=['GET'])
 def evaluate():
     file = request.files['carImage'].read()
+    image = Image.open(io.BytesIO(file))
+    return jsonify(evaluateCar(image))
 
 
 
