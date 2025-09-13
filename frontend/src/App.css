@@ -40,3 +40,13 @@
 .read-the-docs {
   color: #888;
 }
+
+.highlight {
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg%20width='388'%20height='64'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cpath%20d='M386%2024c-64%203-211%208-341%200%2061%206%20174%2014%20300%2014-37%202-148%204-343-6'%20stroke='%23C1F11D'%20stroke-width='48'/%3E%3C/svg%3E");
+  padding: 0 5px 10px;
+  background-repeat: no-repeat;
+  background-position: 50%;
+  background-size: 100% 70%;
+  color: var(--main-dark);
+}
