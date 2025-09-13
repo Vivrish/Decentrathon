@@ -35,13 +35,13 @@ def evaluate():
     if len(files) == 0 or len(files) > 5:
         return jsonify({"error: too many / too little images"}), 400
 
-    images = list(map(lambda file: Image.open(io.BytesIO(file)), files))
+    images = [Image.open(io.BytesIO(file.read())) for file in files]
 
     for image in images:
         if imageContainsPlateNumber(image):
             return jsonify({"error: image contains confidential information"}), 400
 
-    return jsonify({"cleanliness": evaluateCarCleanliness(images), "condition": evaluateCarCondition(images)}), 200
+    return jsonify({"cleanliness": evaluateCarCleanliness(images).name, "condition": evaluateCarCondition(images).name}), 200
 
 
 
