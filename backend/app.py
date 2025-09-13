@@ -1,3 +1,4 @@
+import base64
 from typing import List
 
 from flask import Flask, request, jsonify
@@ -19,16 +20,35 @@ class CarCondition(Enum):
 
 app = Flask(__name__)
 
+def toBase64(crop: Image.Image) -> str:
+    buffer: io.BytesIO = io.BytesIO()
+    crop.save(buffer, format="PNG")
+    data: bytes = buffer.getvalue()
+    return base64.b64encode(data).decode("utf-8")
+
+def cropDetections(image: Image.Image, detections):
+    crops = []
+
+    for det in detections:
+        x1, y1, x2, y2 = map(int, det['bbox'])
+        crop = image.crop((x1, y1, x2, y2))
+        crops.append(crop)
+
+    return crops
+
 
 def evaluateCarCleanliness(images: List[Image.Image]) -> CarCleanliness:
     return CarCleanliness.Clean # TODO needs to be implemented by ML guys
 
-def evaluateCarCondition(images: List[Image.Image]) -> CarCondition:
+def evaluateCarCondition(images: List[Image.Image]) -> list[Image.Image]:
     detector = CarDamageDetector("./models/best.pt")
+    damagedPlaces = []
     for image in images:
-        if detector.detect_from_image(image):
-            return CarCondition.Damaged
-    return CarCondition.Good
+        print("Seeking damage in image...")
+        for detection in detector.detect_from_image(image):
+            damagedPlaces.extend(cropDetections(image, detection))
+
+    return damagedPlaces
 
 def imageContainsPlateNumber(image: Image.Image) -> bool:
     return False # TODO needs to be implemented by ML guys
@@ -48,9 +68,13 @@ def evaluate():
         if imageContainsPlateNumber(image):
             return jsonify({"error: image contains confidential information"}), 400
 
-    return jsonify({"cleanliness": evaluateCarCleanliness(images).name, "condition": evaluateCarCondition(images).name}), 200
+    damagedPlaces = [toBase64(image) for image in evaluateCarCondition(images)]
+    carCondition = CarCondition.Damaged if len(damagedPlaces) > 0 else CarCondition.Good
+
+    return jsonify({"cleanliness": evaluateCarCleanliness(images).name, "condition": carCondition.name, "damagedPlaces": damagedPlaces}), 200
 
 
 
 if __name__ == '__main__':
+    print("Staring")
     app.run(host='0.0.0.0', port=8080)
