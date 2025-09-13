@@ -1,12 +1,17 @@
-import { Button } from "@/components/ui/button";
 import { evaluateCar } from "@/api/evaluateCar";
 import "./App.css";
+import { MultiImageUpload } from "./components/multiImageUpload";
+
+async function uploadImages(files: File[]) {
+  const res = await evaluateCar(files);
+  console.log(res);
+}
 
 function App() {
   return (
     <>
       <div className="flex min-h-svh flex-col items-center justify-center">
-        <Button onClick={evaluateCar}>Evaluate a car</Button>
+        <MultiImageUpload onUpload={uploadImages} maxFiles={5} />
       </div>
     </>
   );
