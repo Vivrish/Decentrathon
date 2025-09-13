@@ -11,5 +11,10 @@ export const evaluateCar = async (
 ): Promise<EvaluateCarResponse> => {
   const formData = new FormData();
   files.forEach((f) => formData.append("carImages", f));
-  return await api.post(API.evaluate(), formData);
+  console.log(formData);
+  return await api.post(API.evaluate(), formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 };
