@@ -7,8 +7,8 @@ services:
       - "8080:8080"
   frontend:
     build: ./frontend
-    container_name: frontend
+    container_name: nginx
     ports:
-      - "3000:3000"
+      - "80:80"
     depends_on:
       - backend
