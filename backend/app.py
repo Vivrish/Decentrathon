@@ -5,6 +5,9 @@ import io
 from PIL import Image
 from enum import Enum
 
+from CarDamageDetector import CarDamageDetector
+
+
 class CarCleanliness(Enum):
     Clean = 0
     Dirty = 1
@@ -21,7 +24,11 @@ def evaluateCarCleanliness(images: List[Image.Image]) -> CarCleanliness:
     return CarCleanliness.Clean # TODO needs to be implemented by ML guys
 
 def evaluateCarCondition(images: List[Image.Image]) -> CarCondition:
-    return CarCondition.Good # TODO needs to be implemented by ML guys
+    detector = CarDamageDetector("./models/best.pt")
+    for image in images:
+        if detector.detect_from_image(image):
+            return CarCondition.Damaged
+    return CarCondition.Good
 
 def imageContainsPlateNumber(image: Image.Image) -> bool:
     return False # TODO needs to be implemented by ML guys
