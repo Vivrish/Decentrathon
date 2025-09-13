@@ -1,10 +1,5 @@
 import { Button } from "../components/ui/button";
 
-// async function uploadImages(files: File[]) {
-//   const res = await evaluateCar(files);
-//   console.log(res);
-// }
-
 export default function MainPage() {
   return (
     <div className="flex flex-col items-center space-between w-full h-lvh py-6">
@@ -47,12 +42,6 @@ export default function MainPage() {
           <Button className="max-w-90 w-full">Попробовать решение</Button>
         </div>
       </div>
-      {/* <div>
-        <Button className="bg-accent">Попробовать решение</Button>
-      </div> */}
-      {/* <div className="flex min-h-svh flex-col items-center justify-center">
-        <MultiImageUpload onUpload={uploadImages} maxFiles={5} /> */}
-      {/* </div> */}
     </div>
   );
 }
