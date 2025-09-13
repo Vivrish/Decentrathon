@@ -14,7 +14,7 @@ def evaluateCar(image: Image.Image) -> CarState:
     return CarState.Clean # TODO needs to be implemented by ML guys
 
 
-@app.route('/evaluate', methods=['GET'])
+@app.route('/api/evaluate', methods=['GET'])
 def evaluate():
     file = request.files['carImage'].read()
     image = Image.open(io.BytesIO(file))
