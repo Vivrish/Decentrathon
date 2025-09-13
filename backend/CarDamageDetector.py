@@ -1,5 +1,3 @@
-import argparse
-import os
 from ultralytics import YOLO
 
 
@@ -47,5 +45,9 @@ class CarDamageDetector:
                     'confidence': conf,
                     'bbox': box.xyxy[0].tolist() if hasattr(box, 'xyxy') else []
                 })
+                print(f"Detection! {detections[len(detections) - 1]}")
+
+        if len(detections) == 0:
+            print("No detection")
 
         return detections
