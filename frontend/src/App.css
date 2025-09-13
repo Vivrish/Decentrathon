@@ -50,3 +50,7 @@
   background-size: 100% 70%;
   color: var(--main-dark);
 }
+
+.bg-accent {
+  background-color: "#C1F11D";
+}
