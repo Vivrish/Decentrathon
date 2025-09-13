@@ -4,7 +4,7 @@ export default function MainPage() {
   return (
     <div className="flex flex-col items-center space-between w-full h-lvh py-6">
       <div className="flex flex-col gap-2">
-        <img src="src/assets/logos.png" alt="" className="w-55" />
+        <img src="/logos.png" alt="" className="w-55" />
         <p className="leading-5 text-sm text-neutral-500 text-center">
           Решение команды ExeQtion
         </p>
@@ -13,22 +13,22 @@ export default function MainPage() {
         <div className="flex felx-col gap-2">
           <img
             className="w-18 h-24 bg-neutral-50 rounded-md"
-            src="src/assets/images/main/Frame 6.png"
+            src="/images/main/Frame 6.png"
             alt=""
           />
           <img
             className="w-18 h-24 bg-neutral-50 rounded-md"
-            src="src/assets/images/main/Frame 7.png"
+            src="/images/main/Frame 7.png"
             alt=""
           />
           <img
             className="w-18 h-24 bg-neutral-50 rounded-md"
-            src="src/assets/images/main/Frame 8.png"
+            src="/images/main/Frame 8.png"
             alt=""
           />
           <img
             className="w-18 h-24 bg-neutral-50 rounded-md"
-            src="src/assets/images/main/Frame 9.png"
+            src="/images/main/Frame 9.png"
             alt=""
           />
         </div>
