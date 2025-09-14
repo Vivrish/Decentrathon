@@ -1,7 +1,6 @@
 // src/components/MultiImageUpload.tsx
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 
 interface MultiImageUploadProps {
