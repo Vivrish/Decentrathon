@@ -1,8 +1,9 @@
 import PageContainer from "@/components/PageContainer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import type { CarCleanliness, CarCondition } from "@/types/evaluateCar";
 import { PiggyBank, Sparkles, ThumbsUp, Wrench } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 type CarStatusProps = {
   clean: boolean;
@@ -66,6 +67,15 @@ const CarStatusAlert = ({ clean, intact }: CarStatusProps) => {
 };
 
 export default function UploadImageResultPage() {
+  const { state } = useLocation();
+  if (!state) return <p>No result provided.</p>;
+  const cleanliness: CarCleanliness = state.cleanliness;
+  const condition: CarCondition = state.condition;
+  const damagedCrops: string[] = state.damagedCrops ?? [];
+  const dirtyCrops: string[] = state.dirtyCrops ?? [];
+
+  console.log(state);
+
   const navigate = useNavigate();
   return (
     <PageContainer>
@@ -74,29 +84,29 @@ export default function UploadImageResultPage() {
       </h1>
 
       <div className="space-y-2 grow">
-        {CarStatusAlert({ clean: true, intact: false })}
+        {CarStatusAlert({
+          clean: cleanliness === "Clean",
+          intact: condition === "Good",
+        })}
 
         <div className="grid grid-cols-2 gap-3">
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOJ-d07MI21CJ3wGgK-NYhpZlnrzeZWGJ3HA&s"
-            className="max-h-60 overflow-hidden rounded-lg"
-            alt=""
-          />
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOJ-d07MI21CJ3wGgK-NYhpZlnrzeZWGJ3HA&s"
-            className="max-h-60 overflow-hidden rounded-lg"
-            alt=""
-          />
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOJ-d07MI21CJ3wGgK-NYhpZlnrzeZWGJ3HA&s"
-            className="max-h-60 overflow-hidden rounded-lg"
-            alt=""
-          />
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOJ-d07MI21CJ3wGgK-NYhpZlnrzeZWGJ3HA&s"
-            className="max-h-60 overflow-hidden rounded-lg"
-            alt=""
-          />
+          {dirtyCrops.map((img, i) => (
+            <img
+              key={`dirty-${i}`}
+              src={`data:image/png;base64,${img}`}
+              className="max-h-60 overflow-hidden rounded-lg"
+              alt={`dirty crop ${i + 1}`}
+            />
+          ))}
+
+          {damagedCrops.map((img, i) => (
+            <img
+              key={`damaged-${i}`}
+              src={`data:image/png;base64,${img}`}
+              className="max-h-60 overflow-hidden rounded-lg"
+              alt={`damaged crop ${i + 1}`}
+            />
+          ))}
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type AxiosResponse } from "axios";
 import { API } from "../constants/api";
 import type { EvaluateCarResponse } from "@/types/evaluateCar";
 
@@ -8,7 +8,7 @@ const api = axios.create({
 
 export const evaluateCar = async (
   files: File[]
-): Promise<EvaluateCarResponse> => {
+): Promise<AxiosResponse<EvaluateCarResponse>> => {
   const formData = new FormData();
   files.forEach((f) => formData.append("carImages", f));
   console.log(formData);
