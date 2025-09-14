@@ -1,0 +1,15 @@
+# Class names with optional thresholds (class_name:threshold)
+dent:0.3
+scratch:0.3
+Scratch:0.3
+rust:0.25
+dirt:0.2
+car-scratch:0.25
+broken_glass:0.5
+broken_headlight:0.5
+crack_and_hole:0.5
+medium_deformation:0.5
+severe_deformation:0.5
+severe_scratch:0.5
+slight_deformation:0.5
+windshield_damage:0.5

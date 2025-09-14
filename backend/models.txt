@@ -1,0 +1,7 @@
+# YOLO model paths (one per line)
+# Format: model_name:path/to/model.pt or just path/to/model.pt
+dents_model:models/dents.pt
+rust_dirt_model:models/rust_dirt.pt
+scratches_model:models/scratches.pt
+damage_model:models/damages.pt
+broken_model:models/broken.pt
