@@ -37,11 +37,14 @@ app = Flask(__name__)
 class PredictResult:
     clean: CarCleanliness
     damage: CarCondition
+    dirtyImages: List[Image.Image]
+    damagedImages: List[Image.Image]
 
-    def __init__(self, clean, damage):
+    def __init__(self, clean, damage, dirtyImages=[], damagedImages=[]):
         self.damage = damage
         self.clean = clean
-
+        self.dirtyImages = dirtyImages
+        self.damagedImages = damagedImages
 
 
 def format_data(sample, system_message):
@@ -97,100 +100,57 @@ def analyze_detections(detections):
 
 
 def predict(dents_model, rust_dirt_model, scratches_model, images) -> PredictResult:
-    # Set local paths
-    LOCAL_MODEL_PATH = "qwen2_vl_7b_instruct"
-    LOCAL_PROCESSOR_PATH = "qwen2_vl_7b_instruct_processor"
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    EPOCHS = 1
-    BATCH_SIZE = 1
-    GRADIENT_CHECKPOINTING = True
-    USE_REENTRANT = False
-    OPTIM = "paged_adamw_32bit"
-    LEARNING_RATE = 2e-5
-    LOGGING_STEPS = 50
-    EVAL_STEPS = 50
-    SAVE_STEPS = 50
-    EVAL_STRATEGY = "steps"
-    SAVE_STRATEGY = "steps"
-    METRIC_FOR_BEST_MODEL = "eval_loss"
-    LOAD_BEST_MODEL_AT_END = True
-    MAX_GRAD_NORM = 1
-    WARMUP_STEPS = 0
-    DATASET_KWARGS = {"skip_prepare_dataset": True}
-    REMOVE_UNUSED_COLUMNS = False
-    MAX_SEQ_LEN = 128
-    NUM_STEPS = (283 // BATCH_SIZE) * EPOCHS
-
-    system_message = """You are an assistant that helps detecting dents, scratches, dirt, rust and other damages of a car via photo, you will be provided results of three YOLO model as important hints to make a comment more precise. YOLO are trained to detect dents, scratches, rust and dirt, so if you spot something different than that please add it as acomment but focus on describing YOLO results. The final format of output should be: comment: location of damage/dirt, degree of damage or dirt or other defect. The target of your comment is a user, so try to be precise, short and exclude all sophisticated terms."""
-
-    # Load your models
+    # Load YOLO models
     model1 = YOLO(dents_model)
     model2 = YOLO(rust_dirt_model)
     model3 = YOLO(scratches_model)
 
-    # Process each image
+    damaged = False
+    dirty = False
+    dirtyImages = []
+    damagedImages = []
+
+    def process_results(results, image, detections, dirtyImages, damagedImages, model_name):
+        for result in results:
+            for box in result.boxes:
+                class_id = int(box.cls.item())
+                class_name = result.names[class_id].lower()
+                bbox = box.xyxy[0].tolist()
+                confidence = box.conf.item()
+
+                # Ignore low-confidence detections
+                if confidence < 0.2:
+                    continue
+
+                detection = {
+                    "model": model_name,
+                    "class": class_name,
+                    "bbox": bbox,
+                    "confidence": confidence
+                }
+                detections.append(detection)
+
+                crop = cropDetection(image.copy(), detection)
+                if "dirt" in class_name:
+                    dirtyImages.append(crop)
+                else:
+                    damagedImages.append(crop)
+
     for image in images:
-
-        # Run predictions with all three models
-        results1 = model1(image, verbose=False)
-        results2 = model2(image, verbose=False)
-        results3 = model3(image, verbose=False)
-
-        # Initialize a list to store detection information
         detections = []
 
-        # Process results from model1
-        for result in results1:
-            for box in result.boxes:
-                class_id = int(box.cls.item())
-                class_name = result.names[class_id]
-                bbox = box.xyxy[0].tolist()
-                confidence = box.conf.item()
-                detections.append({
-                    "model": "Model1 (Dents & Scratches)",
-                    "class": class_name,
-                    "bbox": bbox,
-                    "confidence": confidence
-                })
+        # Run predictions
+        process_results(model1(image, verbose=False), image, detections, dirtyImages, damagedImages, "Model1 (Dents & Scratches)")
+        process_results(model2(image, verbose=False), image, detections, dirtyImages, damagedImages, "Model2 (Rust, Dirt & Scratches)")
+        process_results(model3(image, verbose=False), image, detections, dirtyImages, damagedImages, "Model3 (Scratches Only)")
 
-        # Process results from model2
-        for result in results2:
-            for box in result.boxes:
-                class_id = int(box.cls.item())
-                class_name = result.names[class_id]
-                bbox = box.xyxy[0].tolist()
-                confidence = box.conf.item()
-                detections.append({
-                    "model": "Model2 (Rust, Dirt & Scratches)",
-                    "class": class_name,
-                    "bbox": bbox,
-                    "confidence": confidence
-                })
-
-        # Process results from model3
-        for result in results3:
-            for box in result.boxes:
-                class_id = int(box.cls.item())
-                class_name = result.names[class_id]
-                bbox = box.xyxy[0].tolist()
-                confidence = box.conf.item()
-                detections.append({
-                    "model": "Model3 (Scratches Only)",
-                    "class": class_name,
-                    "bbox": bbox,
-                    "confidence": confidence
-                })
-
-        # Analyze the detections
+        # Analyze detections
         analysis = analyze_detections(detections)
 
-        # Print the results
         print(f'"verdict": "{analysis["verdict"]}"')
         print(f'"cleanliness": "{analysis["cleanliness"]}"')
 
-        # Continue with your existing text_output generation
+        # Build readable output
         text_output = "YOLO Results:\n"
         for detection in detections:
             text_output += (
@@ -201,15 +161,23 @@ def predict(dents_model, rust_dirt_model, scratches_model, images) -> PredictRes
                 f"Confidence: {detection['confidence']:.4f}\n"
                 f"{'-' * 50}\n"
             )
-
-        # You can also add the verdict to your text output if desired
         text_output += f"\nAnalysis Results:\n"
         text_output += f"Verdict: {analysis['verdict']}\n"
         text_output += f"Cleanliness: {analysis['cleanliness']}\n"
-
         print(text_output)
-        res = PredictResult(damage=CarCondition.Damaged if analysis["verdict"] == "damaged" else CarCondition.Good, clean=CarCleanliness.Clean if analysis["cleanliness"] == "clean" else CarCleanliness.Dirty)
-        return res
+
+        if analysis["verdict"] == "damaged":
+            damaged = True
+        if analysis["cleanliness"] == "dirty":
+            dirty = True
+
+    return PredictResult(
+        damage=CarCondition.Damaged if damaged else CarCondition.Good,
+        clean=CarCleanliness.Dirty if dirty else CarCleanliness.Clean,
+        dirtyImages=dirtyImages,
+        damagedImages=damagedImages
+    )
+
 
 
 def toBase64(crop: Image.Image) -> str:
@@ -219,37 +187,10 @@ def toBase64(crop: Image.Image) -> str:
     return base64.b64encode(data).decode("utf-8")
 
 
-def cropDetections(image: Image.Image, detections):
-    crops = []
+def cropDetection(image: Image.Image, detection):
+    x1, y1, x2, y2 = map(int, detection['bbox'])
+    return image.crop((x1, y1, x2, y2))
 
-    for det in detections:
-        x1, y1, x2, y2 = map(int, det['bbox'])
-        crop = image.crop((x1, y1, x2, y2))
-        crops.append(crop)
-
-    return crops
-
-
-def evaluateCarCleanliness(images: List[Image.Image]) -> list[Image.Image]:
-    detector = CarDamageDetector("./models/best.pt")
-    dirtyPlaces = []
-    for image in images:
-        print("Seeking damage in image...")
-        for detection in detector.detect_from_image(image):
-            dirtyPlaces.extend(cropDetections(image, detection))
-
-    return dirtyPlaces
-
-
-def evaluateCarCondition(images: List[Image.Image]) -> list[Image.Image]:
-    detector = CarDamageDetector("./models/best.pt")
-    damagedPlaces = []
-    for image in images:
-        print("Seeking damage in image...")
-        for detection in detector.detect_from_image(image):
-            damagedPlaces.extend(cropDetections(image, detection))
-
-    return damagedPlaces
 
 
 @app.route('/api/evaluate', methods=["POST"])
@@ -262,8 +203,16 @@ def evaluate():
 
     images = [Image.open(io.BytesIO(file.read())) for file in files]
 
-    result = predict(dents_model="./models/dents.pt", rust_dirt_model="./models/rust_dirt.pt", scratches_model="./models/scratches.pt", images = images)
-    return jsonify({"cleanliness": result.clean.name, "condition": result.damage.name}), 200
+    result = predict(dents_model="./models/dents.pt", rust_dirt_model="./models/rust_dirt.pt",
+                     scratches_model="./models/scratches.pt", images=images)
+    return jsonify(
+        {
+            "cleanliness": result.clean.name,
+            "condition": result.damage.name,
+            "dirtyCrops": [toBase64(image) for image in result.dirtyImages],
+            "damagedCrops": [toBase64(image) for image in result.damagedImages]
+        }
+    ), 200
 
 
 if __name__ == '__main__':
