@@ -38,7 +38,7 @@ const CarStatusAlert = ({ clean, intact }: CarStatusProps) => {
         icon: "/images/results/wrench.png",
         title: "Автомобиль повреждён",
         description:
-          "Повреждения вызывают недовольство и снижают оценки пассажиров. Лучше обратиться в сервис для ремонта.",
+          "Повреждения кузова вызывают недовольство и снижают оценки пассажиров. Лучше обратиться в сервис для ремонта.",
       },
     },
   ];
@@ -65,15 +65,14 @@ const CarStatusAlert = ({ clean, intact }: CarStatusProps) => {
 
 export default function UploadImageResultPage() {
   const { state } = useLocation();
-  if (!state) return <p>No result provided.</p>;
-  const cleanliness: CarCleanliness = state.cleanliness;
-  const condition: CarCondition = state.condition;
-  const damagedCrops: string[] = state.damagedCrops ?? [];
-  const dirtyCrops: string[] = state.dirtyCrops ?? [];
-
-  console.log(state);
-
   const navigate = useNavigate();
+
+  // Provide fallback/mock data if state is undefined
+  const cleanliness: CarCleanliness = state?.cleanliness ?? "Clean";
+  const condition: CarCondition = state?.condition ?? "Good";
+  const damagedCrops: string[] = state?.damagedCrops ?? [];
+  const dirtyCrops: string[] = state?.dirtyCrops ?? [];
+
   return (
     <PageContainer>
       <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-center text-balanced">
@@ -81,37 +80,36 @@ export default function UploadImageResultPage() {
       </h1>
 
       <div className="space-y-6 grow mt-8">
-        {CarStatusAlert({
-          clean: cleanliness === "Clean",
-          intact: condition === "Good",
-        })}
-        {!(cleanliness === "Clean" && condition === "Good") && (
-          <div className="bg-slate-50 p-4 flex flex-col gap-2 rounded-xl">
-            <h3 className="font-bold text-lg mb-2">Проблемные зоны</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {dirtyCrops.map((img, i) => (
-                <img
-                  key={`dirty-${i}`}
-                  src={`data:image/png;base64,${img}`}
-                  className="max-h-60 overflow-hidden rounded-lg"
-                  alt={`dirty crop ${i + 1}`}
-                />
-              ))}
+        <CarStatusAlert
+          clean={cleanliness === "Clean"}
+          intact={condition === "Good"}
+        />
 
-              {damagedCrops.map((img, i) => (
-                <img
-                  key={`damaged-${i}`}
-                  src={`data:image/png;base64,${img}`}
-                  className="max-h-60 overflow-hidden rounded-lg"
-                  alt={`damaged crop ${i + 1}`}
-                />
-              ))}
-            </div>
+        <div className="bg-slate-50 p-4 flex flex-col gap-2 rounded-xl">
+          <h3 className="font-bold text-lg">Проблемные зоны</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {dirtyCrops.map((img, i) => (
+              <img
+                key={`dirty-${i}`}
+                src={`data:image/png;base64,${img}`}
+                className="max-h-60 overflow-hidden rounded-lg"
+                alt={`dirty crop ${i + 1}`}
+              />
+            ))}
+
+            {damagedCrops.map((img, i) => (
+              <img
+                key={`damaged-${i}`}
+                src={`data:image/png;base64,${img}`}
+                className="max-h-60 overflow-hidden rounded-lg"
+                alt={`damaged crop ${i + 1}`}
+              />
+            ))}
           </div>
-        )}
+        </div>
       </div>
 
-      <Button onClick={() => navigate("/")}>Вернуться на главную</Button>
+      <Button onClick={() => navigate("/")}>Начать сначала</Button>
     </PageContainer>
   );
 }

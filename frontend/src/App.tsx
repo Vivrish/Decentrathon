@@ -4,6 +4,7 @@ import MainPage from "./pages/MainPage";
 import TipsPage from "./pages/TipsPage";
 import UploadImagePage from "./pages/UploadImagePage";
 import UploadImageResultPage from "./pages/UploadImageResultPage";
+import Playground from "./pages/Playground";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/tips" element={<TipsPage />} />
         <Route path="/uploadImage" element={<UploadImagePage />} />
         <Route path="/uploadImage/result" element={<UploadImageResultPage />} />
+        <Route path="/uploadImage/playground" element={<Playground />} />
       </Routes>
     </BrowserRouter>
   );
