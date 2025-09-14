@@ -65,7 +65,7 @@ export function MultiImageUpload({
              hover:bg-slate-200 
              transition-colors duration-300 ease-in-out"
       >
-        <p className="font-medium text-lg">Загрузить фотографии +</p>
+        <p className="font-medium text-lg">Выбрать фотографии +</p>
         <input
           type="file"
           accept="image/*"

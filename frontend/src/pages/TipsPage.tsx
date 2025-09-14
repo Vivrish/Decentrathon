@@ -20,11 +20,11 @@ export default function TipsPage() {
             <img className="size-5 mt-1" src="/images/icons/check.svg" alt="" />
             <div className="flex flex-col gap-1">
               <h3 className="text-xl font-semibold tracking-tight">
-                Загрузите одну или больше фотографий
+                Загрузите одну или больше фотографий вашего автомобиля
               </h3>
               <p className="leading-5 text-sm text-neutral-500 max-w-100">
-                Cфотографируйте автомобиль днём, полностью, под углом, без
-                посторонних объектов
+                Снимайте в хорошем освещении, чтобы автомобиль был полностью
+                виден, с разных ракурсов и без посторонних объектов.
               </p>
             </div>
           </div>
@@ -41,11 +41,11 @@ export default function TipsPage() {
             <img className="size-5 mt-1" src="/images/icons/x.svg" alt="" />
             <div className="flex flex-col gap-1">
               <h3 className="text-xl font-semibold tracking-tight">
-                Не загружайте фотографии
+                Какие фотографии не стоит загружать
               </h3>
               <p className="leading-5 text-sm text-neutral-500 max-w-100">
-                Темные или против солнца, размытые, обрезанные с посторонними
-                объектами, с фильтрами или обработкой
+                Не загружайте тёмные, размытые, обработанные фильтрами, сильно
+                обрезанные фотографии, с посторонними объектами.
               </p>
             </div>
           </div>
