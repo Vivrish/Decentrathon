@@ -13,12 +13,10 @@ from transformers import Qwen2VLForConditionalGeneration, Qwen2VLProcessor, Bits
 from peft import LoraConfig, get_peft_model
 from trl import SFTConfig, SFTTrainer
 from ultralytics import YOLO
-from PIL import Image
 import cv2
 
 from flask import Flask, request, jsonify
 import io
-from PIL import Image
 from enum import Enum
 
 from CarDamageDetector import CarDamageDetector
@@ -40,8 +38,8 @@ app = Flask(__name__)
 class PredictResult:
     clean: CarCleanliness
     damage: CarCondition
-    dirtyImages: List[Image.Image]
-    damagedImages: List[Image.Image]
+    dirtyImages: List[np.ndarray]
+    damagedImages: List[np.ndarray]
 
     def __init__(self, clean, damage, dirtyImages=[], damagedImages=[]):
         self.damage = damage
@@ -50,13 +48,13 @@ class PredictResult:
         self.damagedImages = damagedImages
 
 
-def preprocess_car_image(image_path, model_path='yolov8m-seg.pt', conf_threshold=0.25,
+def preprocess_car_image(image, model_path='yolov8m-seg.pt', conf_threshold=0.25,
                          target_size=(640, 640), min_coverage=30):
     """
     Preprocess an image to extract and resize the largest car with mask coordinates
 
     Args:
-        image_path: Path to input image
+        image: Input image
         model_path: Path to YOLO segmentation model
         conf_threshold: Confidence threshold for detection
         target_size: Target size for the resized image (width, height)
@@ -87,12 +85,10 @@ def preprocess_car_image(image_path, model_path='yolov8m-seg.pt', conf_threshold
         model = YOLO(model_path)
 
         # Perform inference
-        results = model(image_path, conf=conf_threshold, verbose=False)
+        results = model(image, conf=conf_threshold, verbose=False)
 
-        # Read original image
-        image = cv2.imread(image_path)
         if image is None:
-            result['message'] = f"Error: Could not read image from {image_path}"
+            result['message'] = f"Error: Could not read image from {image}"
             return result, True
 
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -329,6 +325,7 @@ def is_box_center_in_mask(bbox, mask_coordinates):
 def predict(images) -> PredictResult:
     models_dict = load_models_from_file("models.txt")
     all_class_names, file_class_thresholds = load_class_names_from_file("classes.txt")
+    print("DEBUG all_class_names:", all_class_names, type(all_class_names))
 
     # Parse dirt classes - all other classes will be considered damage classes
     dirt_classes = ["dirt"]
@@ -361,13 +358,14 @@ def predict(images) -> PredictResult:
     for image in images:
 
         # Load the image
+        mask_coords = []
         try:
             result, sk = preprocess_car_image(image)
             if sk:
                 input_image = preprocess_image(image)
             else:
                 input_image = result['cropped_resized']
-                mask_coords = result['mask_coordinates']
+                mask_coords = result['mask_coordinates'] or []
         except Exception as e:
             print(f"Error loading image")
             continue
@@ -524,19 +522,15 @@ def analyze_detections(detections):
         "cleanliness": dirt_verdict
     }
 
-def toBase64(crop: Image.Image) -> str:
-    buffer: io.BytesIO = io.BytesIO()
-    crop.save(buffer, format="PNG")
-    data: bytes = buffer.getvalue()
-    return base64.b64encode(data).decode("utf-8")
+def toBase64(crop: np.ndarray) -> str:
+    success, data = cv2.imencode(".jpg", crop)
+    return base64.b64encode(data.tobytes()).decode("utf-8")
 
 
-def cropDetection(image: Image.Image, detection):
+def cropDetection(image: np.ndarray, detection):
     x1, y1, x2, y2 = map(int, detection['bbox'])
-    return image.crop((x1, y1, x2, y2))
+    return image[y1:y2, x1:x2]
 
-def cv2_to_pil(cv_img):
-    return Image.fromarray(cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB))
 
 
 @app.route('/api/evaluate', methods=["POST"])
@@ -547,8 +541,14 @@ def evaluate():
     if len(files) == 0 or len(files) > 5:
         return jsonify({"error: too many / too little images"}), 400
 
-    images = [cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_COLOR) for file in files]
-    images = [cv2_to_pil(img) for img in images if img is not None]
+    images = []
+    for file in files:
+        img = cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_COLOR)
+        if img is None:
+            return jsonify({"error": f"Failed to decode image {file.filename}"}), 400
+        images.append(img)
+
+    print(f"Recevied {len(images)} images")
 
     result = predict(images=images)
     return jsonify(
