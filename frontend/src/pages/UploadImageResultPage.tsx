@@ -80,7 +80,7 @@ export default function UploadImageResultPage() {
         Результат <mark className="highlight">оценки</mark>
       </h1>
 
-      <div className="space-y-6 grow mt-8">
+      <div className="space-y-6 grow mt-6">
         {CarStatusAlert({
           clean: cleanliness === "Clean",
           intact: condition === "Good",
@@ -111,7 +111,9 @@ export default function UploadImageResultPage() {
         )}
       </div>
 
-      <Button onClick={() => navigate("/")}>Вернуться на главную</Button>
+      <Button className="mt-4" onClick={() => navigate("/")}>
+        Вернуться на главную
+      </Button>
     </PageContainer>
   );
 }
